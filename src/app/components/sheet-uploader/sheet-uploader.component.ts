@@ -62,11 +62,15 @@ export class SheetUploaderComponent {
     this.uploadError = null;
 
     try {
+      console.log('Starting file upload...');
       await this.sheetService.uploadSheet(file);
+      console.log('Upload successful, navigating to view...');
       this.router.navigate(['/view']);
     } catch (error) {
-      this.uploadError = 'Error uploading file. Please try again.';
-      console.error('Upload error:', error);
+      console.error('Upload error details:', error);
+      this.uploadError = error instanceof Error 
+        ? `Error uploading file: ${error.message}`
+        : 'Error uploading file. Please try again.';
     } finally {
       this.isUploading = false;
     }
