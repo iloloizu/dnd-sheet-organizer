@@ -7,65 +7,22 @@ import { NotificationService, Notification } from '../../services/notification.s
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="notification-container" *ngIf="currentNotification">
-      <div class="notification" [class]="currentNotification.type">
-        <span class="message">{{ currentNotification.message }}</span>
-        <button class="close-button" (click)="close()">×</button>
-      </div>
+    <div *ngIf="notification" class="notification" [class]="notification.type">
+      {{ notification.message }}
+      <button class="close-button" (click)="close()">×</button>
     </div>
   `,
   styles: [`
-    .notification-container {
+    .notification {
       position: fixed;
       top: 20px;
       right: 20px;
-      z-index: 1000;
-    }
-
-    .notification {
-      display: flex;
-      align-items: center;
-      padding: 12px 24px;
+      padding: 15px 40px 15px 20px;
       border-radius: 4px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      margin-bottom: 10px;
-      min-width: 300px;
-      max-width: 400px;
+      color: white;
+      font-size: 16px;
+      z-index: 1000;
       animation: slideIn 0.3s ease-out;
-    }
-
-    .message {
-      flex: 1;
-      margin-right: 12px;
-    }
-
-    .close-button {
-      background: none;
-      border: none;
-      font-size: 20px;
-      cursor: pointer;
-      padding: 0 4px;
-      color: inherit;
-    }
-
-    .success {
-      background-color: #4CAF50;
-      color: white;
-    }
-
-    .error {
-      background-color: #f44336;
-      color: white;
-    }
-
-    .info {
-      background-color: #2196F3;
-      color: white;
-    }
-
-    .warning {
-      background-color: #FFC107;
-      color: #000;
     }
 
     @keyframes slideIn {
@@ -78,17 +35,46 @@ import { NotificationService, Notification } from '../../services/notification.s
         opacity: 1;
       }
     }
+
+    .success {
+      background-color: #4caf50;
+    }
+
+    .error {
+      background-color: #f44336;
+    }
+
+    .info {
+      background-color: #2196f3;
+    }
+
+    .close-button {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0 5px;
+    }
+
+    .close-button:hover {
+      opacity: 0.8;
+    }
   `]
 })
 export class NotificationComponent implements OnInit {
-  currentNotification: Notification | null = null;
+  notification: Notification | null = null;
 
   constructor(private notificationService: NotificationService) {}
 
   ngOnInit() {
-    this.notificationService.notification$.subscribe(notification => {
-      this.currentNotification = notification;
-    });
+    this.notificationService.notification$.subscribe(
+      notification => this.notification = notification
+    );
   }
 
   close() {

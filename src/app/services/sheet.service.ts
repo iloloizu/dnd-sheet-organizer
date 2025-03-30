@@ -7,7 +7,8 @@ import {
   Abilities, 
   Skills, 
   Spells, 
-  Inventory 
+  Inventory,
+  Layout
 } from '../models/sheet.model';
 
 @Injectable({
@@ -21,16 +22,9 @@ export class SheetService {
   editSection$ = this.editSectionSubject.asObservable();
 
   constructor() {
-    try {
-      // Try the URL method first
-      const workerSrc = new URL('../../assets/pdf.worker.min.mjs', import.meta.url).href;
-      console.log('Setting worker source to:', workerSrc);
-      pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
-    } catch (error) {
-      // Fallback to direct path
-      console.log('Falling back to direct path for worker');
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'assets/pdf.worker.min.mjs';
-    }
+    // Set worker path relative to the application root
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '/assets/pdf.worker.min.mjs';
+    console.log('PDF.js worker path set to:', pdfjsLib.GlobalWorkerOptions.workerSrc);
   }
 
   getCurrentSheet(): Observable<SheetData | null> {
@@ -140,16 +134,16 @@ export class SheetService {
     };
   }
 
-  private getDefaultLayout(): any {
-    // Return default layout configuration
+  private getDefaultLayout(): Layout {
     return {
       sections: [
-        { id: 'characterInfo', title: 'Character Info', order: 1 },
-        { id: 'abilities', title: 'Abilities', order: 2 },
-        { id: 'skills', title: 'Skills', order: 3 },
-        { id: 'spells', title: 'Spells', order: 4 },
-        { id: 'inventory', title: 'Inventory', order: 5 }
-      ]
+        { id: 'characterInfo', title: 'Character Info', order: 1, visible: true, collapsed: false },
+        { id: 'abilities', title: 'Abilities', order: 2, visible: true, collapsed: false },
+        { id: 'skills', title: 'Skills', order: 3, visible: true, collapsed: false },
+        { id: 'spells', title: 'Spells', order: 4, visible: true, collapsed: false },
+        { id: 'inventory', title: 'Inventory', order: 5, visible: true, collapsed: false }
+      ],
+      theme: 'light'
     };
   }
 

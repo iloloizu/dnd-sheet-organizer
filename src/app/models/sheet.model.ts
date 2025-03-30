@@ -98,13 +98,15 @@ export interface Spell {
 
 export interface Inventory {
   items: Item[];
-  currency: {
-    copper: number;
-    silver: number;
-    electrum: number;
-    gold: number;
-    platinum: number;
-  };
+  currency: Currency;
+}
+
+export interface Currency {
+  copper: number;
+  silver: number;
+  electrum: number;
+  gold: number;
+  platinum: number;
 }
 
 export interface Item {

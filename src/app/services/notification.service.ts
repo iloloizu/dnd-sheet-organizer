@@ -3,7 +3,7 @@ import { BehaviorSubject } from 'rxjs';
 
 export interface Notification {
   message: string;
-  type: 'success' | 'error' | 'info' | 'warning';
+  type: 'success' | 'error' | 'info';
   duration?: number;
 }
 
@@ -14,32 +14,29 @@ export class NotificationService {
   private notificationSubject = new BehaviorSubject<Notification | null>(null);
   notification$ = this.notificationSubject.asObservable();
 
-  show(notification: Notification): void {
+  show(notification: Notification) {
     this.notificationSubject.next(notification);
-    if (notification.duration) {
+    
+    if (notification.duration !== undefined) {
       setTimeout(() => {
         this.clear();
       }, notification.duration);
     }
   }
 
-  success(message: string, duration: number = 3000): void {
+  showSuccess(message: string, duration = 3000) {
     this.show({ message, type: 'success', duration });
   }
 
-  error(message: string, duration: number = 5000): void {
+  showError(message: string, duration = 5000) {
     this.show({ message, type: 'error', duration });
   }
 
-  info(message: string, duration: number = 3000): void {
+  showInfo(message: string, duration = 3000) {
     this.show({ message, type: 'info', duration });
   }
 
-  warning(message: string, duration: number = 4000): void {
-    this.show({ message, type: 'warning', duration });
-  }
-
-  clear(): void {
+  clear() {
     this.notificationSubject.next(null);
   }
 } 

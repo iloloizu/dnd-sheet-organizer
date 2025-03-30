@@ -6,7 +6,22 @@ import { NotificationComponent } from '../notification/notification.component';
 import { SheetService } from '../../services/sheet.service';
 import { PdfService } from '../../services/pdf.service';
 import { NotificationService } from '../../services/notification.service';
-import { SheetData } from '../../models/sheet.model';
+import { SheetData, Ability, Skill, Currency } from '../../models/sheet.model';
+
+interface EditingAbility {
+  key: string;
+  value: Ability;
+}
+
+interface EditingSkill {
+  key: string;
+  value: Skill;
+}
+
+interface EditingCurrency {
+  key: keyof Currency;
+  value: number;
+}
 
 @Component({
   selector: 'app-sheet-viewer',
@@ -69,7 +84,7 @@ import { SheetData } from '../../models/sheet.model';
 
             <!-- Abilities Editor -->
             <div *ngSwitchCase="'abilities'" class="abilities-editor">
-              <div class="form-group" *ngFor="let ability of editingData.abilities | keyvalue">
+              <div class="form-group" *ngFor="let ability of getAbilitiesArray()">
                 <label>{{ ability.key | titlecase }}:</label>
                 <div class="ability-inputs">
                   <input type="number" [(ngModel)]="ability.value.score" />
@@ -80,8 +95,8 @@ import { SheetData } from '../../models/sheet.model';
 
             <!-- Skills Editor -->
             <div *ngSwitchCase="'skills'" class="skills-editor">
-              <div class="form-group" *ngFor="let skill of editingData.skills | keyvalue">
-                <label>{{ skill.key | titlecase }}:</label>
+              <div class="form-group" *ngFor="let skill of getSkillsArray()">
+                <label>{{ formatSkillName(skill.key) }}:</label>
                 <div class="skill-inputs">
                   <input type="number" [(ngModel)]="skill.value.modifier" />
                   <label class="checkbox-label">
@@ -124,9 +139,9 @@ import { SheetData } from '../../models/sheet.model';
             <div *ngSwitchCase="'inventory'" class="inventory-editor">
               <div class="currency">
                 <h4>Currency</h4>
-                <div class="form-group" *ngFor="let currency of editingData.inventory.currency | keyvalue">
-                  <label>{{ currency.key | uppercase }}:</label>
-                  <input type="number" [(ngModel)]="editingData.inventory.currency[currency.key]" />
+                <div class="form-group" *ngFor="let curr of getCurrencyArray()">
+                  <label>{{ curr.key | uppercase }}:</label>
+                  <input type="number" [(ngModel)]="editingData.inventory.currency[curr.key]" />
                 </div>
               </div>
               <div class="items">
@@ -291,10 +306,10 @@ import { SheetData } from '../../models/sheet.model';
 export class SheetViewerComponent implements OnInit {
   @ViewChild('sheetContent') sheetContent!: ElementRef;
   currentSheet: SheetData | null = null;
+  editingData: SheetData | null = null;
+  editingSection: { id: string; title: string } | null = null;
   isDarkMode = false;
   isEditing = false;
-  editingSection: any = null;
-  editingData: any = null;
 
   constructor(
     private sheetService: SheetService,
@@ -303,7 +318,7 @@ export class SheetViewerComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.sheetService.getCurrentSheet().subscribe(sheet => {
+    this.sheetService.currentSheet$.subscribe(sheet => {
       this.currentSheet = sheet;
     });
 
@@ -314,15 +329,44 @@ export class SheetViewerComponent implements OnInit {
     });
   }
 
+  getAbilitiesArray(): EditingAbility[] {
+    if (!this.editingData?.abilities) return [];
+    return Object.entries(this.editingData.abilities).map(([key, value]) => ({
+      key,
+      value
+    }));
+  }
+
+  getSkillsArray(): EditingSkill[] {
+    if (!this.editingData?.skills) return [];
+    return Object.entries(this.editingData.skills).map(([key, value]) => ({
+      key,
+      value
+    }));
+  }
+
+  getCurrencyArray(): EditingCurrency[] {
+    if (!this.editingData?.inventory?.currency) return [];
+    return Object.entries(this.editingData.inventory.currency).map(([key, value]) => ({
+      key: key as keyof Currency,
+      value
+    }));
+  }
+
+  formatSkillName(name: string): string {
+    return name.replace(/([A-Z])/g, ' $1').trim();
+  }
+
   async exportToPDF() {
     if (!this.currentSheet) return;
     
     try {
-      await this.pdfService.generatePDF(this.currentSheet, this.sheetContent.nativeElement);
-      this.notificationService.success('PDF exported successfully!');
+      const element = this.sheetContent.nativeElement;
+      await this.pdfService.generatePDF(element, this.currentSheet);
+      this.notificationService.showSuccess('PDF exported successfully');
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      this.notificationService.error('Failed to export PDF. Please try again.');
+      console.error('Error exporting PDF:', error);
+      this.notificationService.showError('Failed to export PDF. Please try again.');
     }
   }
 
@@ -332,18 +376,16 @@ export class SheetViewerComponent implements OnInit {
     try {
       const jsonString = JSON.stringify(this.currentSheet, null, 2);
       const blob = new Blob([jsonString], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${this.currentSheet.characterInfo?.name || 'character'}-sheet.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      this.notificationService.success('JSON exported successfully!');
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${this.currentSheet.characterInfo?.name || 'character'}-sheet.json`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      this.notificationService.showSuccess('JSON exported successfully');
     } catch (error) {
       console.error('Error exporting JSON:', error);
-      this.notificationService.error('Failed to export JSON. Please try again.');
+      this.notificationService.showError('Failed to export JSON. Please try again.');
     }
   }
 
@@ -361,15 +403,15 @@ export class SheetViewerComponent implements OnInit {
   }
 
   saveEdit() {
-    if (!this.currentSheet || !this.editingData) return;
-
+    if (!this.editingSection || !this.editingData) return;
+    
     try {
       this.sheetService.updateSheetData(this.editingData);
-      this.notificationService.success('Changes saved successfully!');
       this.closeEditModal();
+      this.notificationService.showSuccess('Changes saved successfully');
     } catch (error) {
       console.error('Error saving changes:', error);
-      this.notificationService.error('Failed to save changes. Please try again.');
+      this.notificationService.showError('Failed to save changes. Please try again.');
     }
   }
 
