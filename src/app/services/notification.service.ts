@@ -14,29 +14,30 @@ export class NotificationService {
   private notificationSubject = new BehaviorSubject<Notification | null>(null);
   notification$ = this.notificationSubject.asObservable();
 
-  show(notification: Notification) {
-    this.notificationSubject.next(notification);
-    
-    if (notification.duration !== undefined) {
+  constructor() {}
+
+  showSuccess(message: string, duration: number = 3000): void {
+    this.show(message, 'success', duration);
+  }
+
+  showError(message: string, duration: number = 5000): void {
+    this.show(message, 'error', duration);
+  }
+
+  showInfo(message: string, duration: number = 3000): void {
+    this.show(message, 'info', duration);
+  }
+
+  private show(message: string, type: 'success' | 'error' | 'info', duration: number): void {
+    this.notificationSubject.next({ message, type, duration });
+    if (duration > 0) {
       setTimeout(() => {
         this.clear();
-      }, notification.duration);
+      }, duration);
     }
   }
 
-  showSuccess(message: string, duration = 3000) {
-    this.show({ message, type: 'success', duration });
-  }
-
-  showError(message: string, duration = 5000) {
-    this.show({ message, type: 'error', duration });
-  }
-
-  showInfo(message: string, duration = 3000) {
-    this.show({ message, type: 'info', duration });
-  }
-
-  clear() {
+  clear(): void {
     this.notificationSubject.next(null);
   }
 } 
