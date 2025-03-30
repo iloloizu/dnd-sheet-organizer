@@ -1,0 +1,137 @@
+<div class="upload-container">
+  <div 
+    class="drop-zone"
+    [class.dragging]="isDragging"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)"
+  >
+    <div class="upload-content">
+      <div class="upload-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+      </div>
+      
+      <h2>Upload Your D&D Character Sheet</h2>
+      <p>Drag and drop your PDF file here, or click to browse</p>
+      
+      <input
+        type="file"
+        accept=".pdf"
+        (change)="onFileSelected($event)"
+        class="file-input"
+        #fileInput
+      >
+      
+      <button 
+        class="browse-button"
+        (click)="fileInput.click()"
+      >
+        Browse Files
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="isUploading" class="upload-progress">
+    <div class="spinner"></div>
+    <p>Processing your character sheet...</p>
+  </div>
+
+  <div *ngIf="uploadError" class="error-message">
+    {{ uploadError }}
+  </div>
+</div>
+
+<style>
+  .upload-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+  }
+
+  .drop-zone {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .drop-zone.dragging {
+    border-color: #007bff;
+    background-color: #e9ecef;
+  }
+
+  .upload-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .upload-icon {
+    color: #6c757d;
+  }
+
+  h2 {
+    margin: 0;
+    color: #212529;
+  }
+
+  p {
+    margin: 0;
+    color: #6c757d;
+  }
+
+  .file-input {
+    display: none;
+  }
+
+  .browse-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .browse-button:hover {
+    background-color: #0056b3;
+  }
+
+  .upload-progress {
+    margin-top: 1rem;
+    text-align: center;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .error-message {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f8d7da;
+    color: #721c24;
+    border-radius: 4px;
+    text-align: center;
+  }
+</style>
